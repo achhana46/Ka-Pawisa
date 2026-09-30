@@ -1,14 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <link rel="manifest" href="data:application/manifest+json;utf8,%7B%22name%22%3A%22Ka%20Pawisa%22%2C%22short_name%22%3A%22KaPawisa%22%2C%22start_url%22%3A%22.%2F%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23ffffff%22%2C%22theme_color%22%3A%22%234338ca%22%7D">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-capable" content="yes">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ka Pawisa - Daily Mindful Expense Tracker</title>
-  <link rel="apple-touch-icon" href="https://img.icons8.com/color/192/wallet--v1.png">
-<link rel="icon" type="image/png" href="https://img.icons8.com/color/192/wallet--v1.png">
+  <title>Ka Pawisa</title>
+  
+  <!-- Web App Manifest embedded with high-res SVG Icon -->
+  <link rel="manifest" href='data:application/manifest+json,{"name":"Ka Pawisa","short_name":"Ka Pawisa","start_url":"./","display":"standalone","background_color":"#4338ca","theme_color":"#4338ca","icons":[{"src":"data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Crect width=%22100%22 height=%22100%22 rx=%2222%22 fill=%22%234338ca%22/%3E%3Ctext y=%2268%22 x=%2250%22 font-size=%2252%22 font-family=%22system-ui,-apple-system,sans-serif%22 font-weight=%22900%22 fill=%22white%22 text-anchor=%22middle%22%3EKP%3C/text%3E%3C/svg%3E","sizes":"192x192 512x512","type":"image/svg+xml","purpose":"any maskable"}]}'>
+  
+  <link rel="apple-touch-icon" href='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Crect width=%22100%22 height=%22100%22 rx=%2222%22 fill=%22%234338ca%22/%3E%3Ctext y=%2268%22 x=%2250%22 font-size=%2252%22 font-family=%22system-ui,-apple-system,sans-serif%22 font-weight=%22900%22 fill=%22white%22 text-anchor=%22middle%22%3EKP%3C/text%3E%3C/svg%3E'>
+  <link rel="icon" type="image/svg+xml" href='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Crect width=%22100%22 height=%22100%22 rx=%2222%22 fill=%22%234338ca%22/%3E%3Ctext y=%2268%22 x=%2250%22 font-size=%2252%22 font-family=%22system-ui,-apple-system,sans-serif%22 font-weight=%22900%22 fill=%22white%22 text-anchor=%22middle%22%3EKP%3C/text%3E%3C/svg%3E'>
+
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#4338ca">
+
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -38,7 +44,7 @@
 
   <main class="max-w-3xl mx-auto px-4 pt-4 space-y-4">
     
-    <!-- Smart Warning Alert Banner (Appears if unwanted spend > limit) -->
+    <!-- Smart Warning Alert Banner -->
     <div id="warningAlert" class="hidden bg-rose-50 border-l-4 border-rose-500 p-4 rounded-xl shadow-sm">
       <div class="flex items-start gap-3">
         <i data-lucide="alert-triangle" class="w-6 h-6 text-rose-600 shrink-0 mt-0.5"></i>
@@ -89,9 +95,7 @@
     </div>
 
     <!-- Items List Container -->
-    <div id="expenseList" class="space-y-2">
-      <!-- Items dynamically injected here -->
-    </div>
+    <div id="expenseList" class="space-y-2"></div>
   </main>
 
   <!-- Add Item Modal Dialog -->
@@ -156,14 +160,12 @@
   </div>
 
   <script>
-    // LocalStorage Keys
     const STORAGE_KEY = 'ka_pawisa_expenses';
     const LIMIT_KEY = 'ka_pawisa_limit';
 
     let expenses = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
     let dailyLimit = parseFloat(localStorage.getItem(LIMIT_KEY) || '500');
 
-    // Default today's date in form
     document.getElementById('itemDate').value = new Date().toISOString().split('T')[0];
     document.getElementById('limitInput').value = dailyLimit;
 
@@ -202,7 +204,6 @@
       expenses.unshift(newExpense);
       saveAndRender();
 
-      // Reset and close modal
       document.getElementById('expenseForm').reset();
       document.getElementById('itemDate').value = new Date().toISOString().split('T')[0];
       document.getElementById('addModal').classList.add('hidden');
@@ -232,7 +233,6 @@
         const itemDate = new Date(item.date);
         const amt = item.amount;
 
-        // Daily
         if (item.date === todayStr) {
           dailySum += amt;
           if (item.isUnnecessary) {
@@ -240,30 +240,25 @@
           }
         }
 
-        // Weekly (rolling 7 days)
         if (itemDate >= sevenDaysAgo && itemDate <= todayDate) {
           weeklySum += amt;
         }
 
-        // Monthly
         if (itemDate.getFullYear() === currentYear && itemDate.getMonth() === currentMonth) {
           monthlySum += amt;
         }
 
-        // Yearly
         if (itemDate.getFullYear() === currentYear) {
           yearlySum += amt;
         }
       });
 
-      // Update UI cards
       document.getElementById('sumDaily').textContent = `₹${dailySum.toLocaleString('en-IN')}`;
       document.getElementById('subDaily').textContent = `Wants: ₹${dailyUnnecessary.toLocaleString('en-IN')}`;
       document.getElementById('sumWeekly').textContent = `₹${weeklySum.toLocaleString('en-IN')}`;
       document.getElementById('sumMonthly').textContent = `₹${monthlySum.toLocaleString('en-IN')}`;
       document.getElementById('sumYearly').textContent = `₹${yearlySum.toLocaleString('en-IN')}`;
 
-      // Check Warning Condition
       const alertEl = document.getElementById('warningAlert');
       if (dailyUnnecessary > dailyLimit) {
         alertEl.classList.remove('hidden');
@@ -312,7 +307,6 @@
       `).join('');
     }
 
-    // Initial render
     saveAndRender();
   </script>
 </body>
