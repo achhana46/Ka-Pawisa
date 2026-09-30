@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ka Pawisa - Daily Mindful Expense Tracker</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .badge-need { background-color: #E8F5E9; color: #2E7D32; border: 1px solid #A5D6A7; }
+    .badge-want { background-color: #FFEBEE; color: #C62828; border: 1px solid #FFCDD2; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased min-h-screen pb-16">
+
+  <!-- Navigation Bar -->
+  <header class="bg-indigo-700 text-white sticky top-0 z-30 shadow-md">
+    <div class="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center space-x-2">
+        <div class="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center font-black text-xl tracking-wider">KP</div>
+        <div>
+          <h1 class="text-xl font-bold tracking-tight">Ka Pawisa</h1>
+          <p class="text-xs text-indigo-200">Daily Spending & Need Monitor</p>
+        </div>
+      </div>
+      <button onclick="document.getElementById('addModal').classList.remove('hidden')" class="bg-emerald-500 hover:bg-emerald-600 px-3.5 py-1.5 rounded-lg text-sm font-semibold flex items-center gap-1 shadow-sm transition">
+        <i data-lucide="plus" class="w-4 h-4"></i> Add Item
+      </button>
+    </div>
+  </header>
+
+  <main class="max-w-3xl mx-auto px-4 pt-4 space-y-4">
+    
+    <!-- Smart Warning Alert Banner (Appears if unwanted spend > limit) -->
+    <div id="warningAlert" class="hidden bg-rose-50 border-l-4 border-rose-500 p-4 rounded-xl shadow-sm">
+      <div class="flex items-start gap-3">
+        <i data-lucide="alert-triangle" class="w-6 h-6 text-rose-600 shrink-0 mt-0.5"></i>
+        <div class="flex-1">
+          <h3 class="text-sm font-bold text-rose-900" id="warningTitle">Unnecessary Spending Alert!</h3>
+          <p class="text-xs text-rose-700 mt-1" id="warningDesc">You have exceeded your safe limit on non-essential items today. Pause and avoid impulse purchases!</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Spending Aggregations Cards -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+      <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm">
+        <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Today</span>
+        <div class="text-lg font-bold text-slate-900 mt-1" id="sumDaily">₹0</div>
+        <div class="text-[11px] text-rose-500 font-medium" id="subDaily">Wants: ₹0</div>
+      </div>
+      <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm">
+        <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Weekly</span>
+        <div class="text-lg font-bold text-slate-900 mt-1" id="sumWeekly">₹0</div>
+        <div class="text-[11px] text-slate-500">Last 7 days</div>
+      </div>
+      <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm">
+        <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Monthly</span>
+        <div class="text-lg font-bold text-slate-900 mt-1" id="sumMonthly">₹0</div>
+        <div class="text-[11px] text-slate-500">This month</div>
+      </div>
+      <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm">
+        <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Yearly</span>
+        <div class="text-lg font-bold text-slate-900 mt-1" id="sumYearly">₹0</div>
+        <div class="text-[11px] text-slate-500">This year</div>
+      </div>
+    </div>
+
+    <!-- Daily Threshold Setting -->
+    <div class="bg-white px-4 py-2.5 rounded-xl border border-slate-200 flex items-center justify-between text-xs text-slate-600">
+      <span>Daily Unnecessary Spending Limit:</span>
+      <div class="flex items-center gap-1 font-semibold">
+        <span>₹</span>
+        <input type="number" id="limitInput" class="w-16 border rounded px-1.5 py-0.5 text-right font-bold text-slate-800" value="500" onchange="updateLimit(this.value)">
+      </div>
+    </div>
+
+    <!-- Expense List Header -->
+    <div class="flex items-center justify-between pt-2">
+      <h2 class="text-base font-bold text-slate-800">Itemized Spending</h2>
+      <span class="text-xs text-slate-500" id="itemCount">0 items recorded</span>
+    </div>
+
+    <!-- Items List Container -->
+    <div id="expenseList" class="space-y-2">
+      <!-- Items dynamically injected here -->
+    </div>
+  </main>
+
+  <!-- Add Item Modal Dialog -->
+  <div id="addModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-md rounded-2xl p-6 shadow-xl space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-bold text-slate-900">Record Item Spending</h3>
+        <button onclick="document.getElementById('addModal').classList.add('hidden')" class="text-slate-400 hover:text-slate-600">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <form id="expenseForm" onsubmit="handleFormSubmit(event)" class="space-y-3">
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">What did you buy?</label>
+          <input type="text" id="itemTitle" required placeholder="e.g., Coffee, Petrol, Notebook" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Amount (₹)</label>
+            <input type="number" step="0.01" id="itemAmount" required placeholder="0.00" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Date</label>
+            <input type="date" id="itemDate" required class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Category</label>
+          <input type="text" id="itemCategory" placeholder="e.g., Food, Transport, Snacks" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+        </div>
+
+        <!-- Intent Selection -->
+        <div class="pt-2">
+          <label class="block text-xs font-semibold text-slate-600 mb-1.5">Was this spending really necessary?</label>
+          <div class="grid grid-cols-2 gap-2">
+            <label class="border border-slate-200 rounded-lg p-2.5 flex items-center gap-2 cursor-pointer hover:bg-slate-50">
+              <input type="radio" name="intent" value="need" checked class="text-indigo-600">
+              <div>
+                <div class="text-xs font-bold text-emerald-700">Need (Essential)</div>
+                <div class="text-[10px] text-slate-400">Bills, groceries, health</div>
+              </div>
+            </label>
+            <label class="border border-slate-200 rounded-lg p-2.5 flex items-center gap-2 cursor-pointer hover:bg-slate-50">
+              <input type="radio" name="intent" value="want" class="text-indigo-600">
+              <div>
+                <div class="text-xs font-bold text-rose-600">Want (Unnecessary)</div>
+                <div class="text-[10px] text-slate-400">Treats, impulse, luxury</div>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <div class="pt-3 flex gap-2">
+          <button type="button" onclick="document.getElementById('addModal').classList.add('hidden')" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 py-2 rounded-lg font-medium text-sm">Cancel</button>
+          <button type="submit" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-lg font-semibold text-sm">Save Expense</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // LocalStorage Keys
+    const STORAGE_KEY = 'ka_pawisa_expenses';
+    const LIMIT_KEY = 'ka_pawisa_limit';
+
+    let expenses = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    let dailyLimit = parseFloat(localStorage.getItem(LIMIT_KEY) || '500');
+
+    // Default today's date in form
+    document.getElementById('itemDate').value = new Date().toISOString().split('T')[0];
+    document.getElementById('limitInput').value = dailyLimit;
+
+    function saveAndRender() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(expenses));
+      renderList();
+      computeAggregations();
+      lucide.createIcons();
+    }
+
+    function updateLimit(val) {
+      dailyLimit = parseFloat(val) || 500;
+      localStorage.setItem(LIMIT_KEY, dailyLimit);
+      computeAggregations();
+    }
+
+    function handleFormSubmit(e) {
+      e.preventDefault();
+      const title = document.getElementById('itemTitle').value.trim();
+      const amount = parseFloat(document.getElementById('itemAmount').value);
+      const date = document.getElementById('itemDate').value;
+      const category = document.getElementById('itemCategory').value.trim() || 'General';
+      const isUnnecessary = document.querySelector('input[name="intent"]:checked').value === 'want';
+
+      if (!title || isNaN(amount) || amount <= 0) return;
+
+      const newExpense = {
+        id: Date.now().toString(),
+        title,
+        amount,
+        date,
+        category,
+        isUnnecessary
+      };
+
+      expenses.unshift(newExpense);
+      saveAndRender();
+
+      // Reset and close modal
+      document.getElementById('expenseForm').reset();
+      document.getElementById('itemDate').value = new Date().toISOString().split('T')[0];
+      document.getElementById('addModal').classList.add('hidden');
+    }
+
+    function deleteItem(id) {
+      expenses = expenses.filter(item => item.id !== id);
+      saveAndRender();
+    }
+
+    function computeAggregations() {
+      const todayStr = new Date().toISOString().split('T')[0];
+      const todayDate = new Date();
+      const currentYear = todayDate.getFullYear();
+      const currentMonth = todayDate.getMonth();
+
+      let dailySum = 0;
+      let dailyUnnecessary = 0;
+      let weeklySum = 0;
+      let monthlySum = 0;
+      let yearlySum = 0;
+
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(todayDate.getDate() - 7);
+
+      expenses.forEach(item => {
+        const itemDate = new Date(item.date);
+        const amt = item.amount;
+
+        // Daily
+        if (item.date === todayStr) {
+          dailySum += amt;
+          if (item.isUnnecessary) {
+            dailyUnnecessary += amt;
+          }
+        }
+
+        // Weekly (rolling 7 days)
+        if (itemDate >= sevenDaysAgo && itemDate <= todayDate) {
+          weeklySum += amt;
+        }
+
+        // Monthly
+        if (itemDate.getFullYear() === currentYear && itemDate.getMonth() === currentMonth) {
+          monthlySum += amt;
+        }
+
+        // Yearly
+        if (itemDate.getFullYear() === currentYear) {
+          yearlySum += amt;
+        }
+      });
+
+      // Update UI cards
+      document.getElementById('sumDaily').textContent = `₹${dailySum.toLocaleString('en-IN')}`;
+      document.getElementById('subDaily').textContent = `Wants: ₹${dailyUnnecessary.toLocaleString('en-IN')}`;
+      document.getElementById('sumWeekly').textContent = `₹${weeklySum.toLocaleString('en-IN')}`;
+      document.getElementById('sumMonthly').textContent = `₹${monthlySum.toLocaleString('en-IN')}`;
+      document.getElementById('sumYearly').textContent = `₹${yearlySum.toLocaleString('en-IN')}`;
+
+      // Check Warning Condition
+      const alertEl = document.getElementById('warningAlert');
+      if (dailyUnnecessary > dailyLimit) {
+        alertEl.classList.remove('hidden');
+        document.getElementById('warningTitle').textContent = `Alert: ₹${dailyUnnecessary.toLocaleString('en-IN')} spent on unnecessary items today!`;
+        document.getElementById('warningDesc').textContent = `You exceeded your ₹${dailyLimit} daily limit on wants. Think twice before your next purchase today!`;
+      } else {
+        alertEl.classList.add('hidden');
+      }
+    }
+
+    function renderList() {
+      const listEl = document.getElementById('expenseList');
+      document.getElementById('itemCount').textContent = `${expenses.length} item${expenses.length === 1 ? '' : 's'}`;
+
+      if (expenses.length === 0) {
+        listEl.innerHTML = `
+          <div class="bg-white rounded-xl border border-slate-200 p-8 text-center text-slate-400 text-sm">
+            <i data-lucide="receipt" class="w-10 h-10 mx-auto text-slate-300 mb-2"></i>
+            No spending recorded yet. Click <b>Add Item</b> above to begin!
+          </div>
+        `;
+        return;
+      }
+
+      listEl.innerHTML = expenses.map(item => `
+        <div class="bg-white border border-slate-200 rounded-xl p-3.5 flex items-center justify-between shadow-sm">
+          <div class="flex-1 pr-3">
+            <div class="flex items-center gap-2">
+              <span class="font-bold text-slate-900 text-sm">${item.title}</span>
+              <span class="text-[11px] px-2 py-0.5 rounded-full font-semibold ${item.isUnnecessary ? 'badge-want' : 'badge-need'}">
+                ${item.isUnnecessary ? 'Unnecessary' : 'Essential'}
+              </span>
+            </div>
+            <div class="text-xs text-slate-500 mt-1 flex items-center gap-3">
+              <span><i data-lucide="tag" class="w-3 h-3 inline mr-1 text-slate-400"></i>${item.category}</span>
+              <span><i data-lucide="calendar" class="w-3 h-3 inline mr-1 text-slate-400"></i>${item.date}</span>
+            </div>
+          </div>
+          <div class="text-right flex items-center gap-3">
+            <span class="text-base font-bold text-slate-900">₹${item.amount.toLocaleString('en-IN')}</span>
+            <button onclick="deleteItem('${item.id}')" class="text-slate-300 hover:text-rose-500 transition p-1" title="Delete">
+              <i data-lucide="trash-2" class="w-4 h-4"></i>
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Initial render
+    saveAndRender();
+  </script>
+</body>
+</html>
