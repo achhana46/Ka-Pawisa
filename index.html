@@ -5,9 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Ka Pawisa</title>
   
-  <!-- Web App Manifest embedded with high-res SVG Icon -->
   <link rel="manifest" href='data:application/manifest+json,{"name":"Ka Pawisa","short_name":"Ka Pawisa","start_url":"./","display":"standalone","background_color":"#4338ca","theme_color":"#4338ca","icons":[{"src":"data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Crect width=%22100%22 height=%22100%22 rx=%2222%22 fill=%22%234338ca%22/%3E%3Ctext y=%2268%22 x=%2250%22 font-size=%2252%22 font-family=%22system-ui,-apple-system,sans-serif%22 font-weight=%22900%22 fill=%22white%22 text-anchor=%22middle%22%3EKP%3C/text%3E%3C/svg%3E","sizes":"192x192 512x512","type":"image/svg+xml","purpose":"any maskable"}]}'>
-  
   <link rel="apple-touch-icon" href='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Crect width=%22100%22 height=%22100%22 rx=%2222%22 fill=%22%234338ca%22/%3E%3Ctext y=%2268%22 x=%2250%22 font-size=%2252%22 font-family=%22system-ui,-apple-system,sans-serif%22 font-weight=%22900%22 fill=%22white%22 text-anchor=%22middle%22%3EKP%3C/text%3E%3C/svg%3E'>
   <link rel="icon" type="image/svg+xml" href='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Crect width=%22100%22 height=%22100%22 rx=%2222%22 fill=%22%234338ca%22/%3E%3Ctext y=%2268%22 x=%2250%22 font-size=%2252%22 font-family=%22system-ui,-apple-system,sans-serif%22 font-weight=%22900%22 fill=%22white%22 text-anchor=%22middle%22%3EKP%3C/text%3E%3C/svg%3E'>
 
@@ -22,11 +20,12 @@
     body { font-family: 'Plus Jakarta Sans', sans-serif; }
     .badge-need { background-color: #E8F5E9; color: #2E7D32; border: 1px solid #A5D6A7; }
     .badge-want { background-color: #FFEBEE; color: #C62828; border: 1px solid #FFCDD2; }
+    .active-card { border-color: #4f46e5 !important; background-color: #eef2ff !important; }
   </style>
 </head>
-<body class="bg-slate-50 text-slate-800 antialiased min-h-screen pb-16">
+<body class="bg-slate-50 text-slate-800 antialiased min-h-screen pb-20">
 
-  <!-- Navigation Bar -->
+  <!-- Header -->
   <header class="bg-indigo-700 text-white sticky top-0 z-30 shadow-md">
     <div class="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
       <div class="flex items-center space-x-2">
@@ -44,39 +43,85 @@
 
   <main class="max-w-3xl mx-auto px-4 pt-4 space-y-4">
     
-    <!-- Smart Warning Alert Banner -->
+    <!-- Warning Alert -->
     <div id="warningAlert" class="hidden bg-rose-50 border-l-4 border-rose-500 p-4 rounded-xl shadow-sm">
       <div class="flex items-start gap-3">
         <i data-lucide="alert-triangle" class="w-6 h-6 text-rose-600 shrink-0 mt-0.5"></i>
         <div class="flex-1">
           <h3 class="text-sm font-bold text-rose-900" id="warningTitle">Unnecessary Spending Alert!</h3>
-          <p class="text-xs text-rose-700 mt-1" id="warningDesc">You have exceeded your safe limit on non-essential items today. Pause and avoid impulse purchases!</p>
+          <p class="text-xs text-rose-700 mt-1" id="warningDesc">You exceeded your safe limit on non-essential items today. Slow down!</p>
         </div>
       </div>
     </div>
 
-    <!-- Spending Aggregations Cards -->
+    <!-- Spending Aggregations Cards (Clickable) -->
     <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-      <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm">
-        <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Today</span>
-        <div class="text-lg font-bold text-slate-900 mt-1" id="sumDaily">₹0</div>
-        <div class="text-[11px] text-rose-500 font-medium" id="subDaily">Wants: ₹0</div>
+      
+      <!-- Daily Card -->
+      <div id="cardDaily" onclick="selectView('daily')" class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm cursor-pointer transition relative active-card">
+        <div class="flex items-center justify-between mb-1">
+          <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Daily</span>
+          <div class="flex items-center gap-1">
+            <button onclick="event.stopPropagation(); changeDay(-1)" class="p-0.5 text-slate-400 hover:text-indigo-600"><i data-lucide="chevron-left" class="w-3.5 h-3.5"></i></button>
+            <label class="cursor-pointer p-0.5 text-indigo-600 hover:text-indigo-800" title="Choose date">
+              <i data-lucide="calendar" class="w-3.5 h-3.5"></i>
+              <input type="date" id="selectedDailyDate" class="hidden" onchange="onDailyDatePicked(this.value)">
+            </label>
+            <button onclick="event.stopPropagation(); changeDay(1)" class="p-0.5 text-slate-400 hover:text-indigo-600"><i data-lucide="chevron-right" class="w-3.5 h-3.5"></i></button>
+          </div>
+        </div>
+        <div class="text-lg font-bold text-slate-900" id="sumDaily">₹0</div>
+        <div class="text-[10px] text-slate-500 truncate" id="labelDaily">Today</div>
+        <div class="text-[11px] text-rose-500 font-medium mt-0.5" id="subDaily">Wants: ₹0</div>
       </div>
-      <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm">
-        <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Weekly</span>
-        <div class="text-lg font-bold text-slate-900 mt-1" id="sumWeekly">₹0</div>
-        <div class="text-[11px] text-slate-500">Last 7 days</div>
+
+      <!-- Weekly Card (Sunday - Saturday) -->
+      <div id="cardWeekly" onclick="selectView('weekly')" class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm cursor-pointer transition">
+        <div class="flex items-center justify-between mb-1">
+          <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Weekly</span>
+          <div class="flex items-center gap-1">
+            <button onclick="event.stopPropagation(); changeWeek(-1)" class="p-0.5 text-slate-400 hover:text-indigo-600"><i data-lucide="chevron-left" class="w-3.5 h-3.5"></i></button>
+            <button onclick="event.stopPropagation(); changeWeek(1)" class="p-0.5 text-slate-400 hover:text-indigo-600"><i data-lucide="chevron-right" class="w-3.5 h-3.5"></i></button>
+          </div>
+        </div>
+        <div class="text-lg font-bold text-slate-900" id="sumWeekly">₹0</div>
+        <div class="text-[10px] text-slate-500 truncate" id="labelWeekly">Sun - Sat</div>
+        <div class="text-[11px] text-rose-500 font-medium mt-0.5" id="subWeekly">Wants: ₹0</div>
       </div>
-      <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm">
-        <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Monthly</span>
-        <div class="text-lg font-bold text-slate-900 mt-1" id="sumMonthly">₹0</div>
-        <div class="text-[11px] text-slate-500">This month</div>
+
+      <!-- Monthly Card -->
+      <div id="cardMonthly" onclick="selectView('monthly')" class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm cursor-pointer transition">
+        <div class="flex items-center justify-between mb-1">
+          <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Monthly</span>
+          <div class="flex items-center gap-1">
+            <button onclick="event.stopPropagation(); changeMonth(-1)" class="p-0.5 text-slate-400 hover:text-indigo-600"><i data-lucide="chevron-left" class="w-3.5 h-3.5"></i></button>
+            <button onclick="event.stopPropagation(); changeMonth(1)" class="p-0.5 text-slate-400 hover:text-indigo-600"><i data-lucide="chevron-right" class="w-3.5 h-3.5"></i></button>
+          </div>
+        </div>
+        <div class="text-lg font-bold text-slate-900" id="sumMonthly">₹0</div>
+        <div class="text-[10px] text-slate-500 truncate" id="labelMonthly">This month</div>
+        <div class="text-[11px] text-rose-500 font-medium mt-0.5" id="subMonthly">Wants: ₹0</div>
       </div>
-      <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm">
-        <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Yearly</span>
-        <div class="text-lg font-bold text-slate-900 mt-1" id="sumYearly">₹0</div>
-        <div class="text-[11px] text-slate-500">This year</div>
+
+      <!-- Yearly Card -->
+      <div id="cardYearly" onclick="selectView('yearly')" class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm cursor-pointer transition">
+        <div class="flex items-center justify-between mb-1">
+          <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Yearly</span>
+          <div class="flex items-center gap-1">
+            <button onclick="event.stopPropagation(); changeYear(-1)" class="p-0.5 text-slate-400 hover:text-indigo-600"><i data-lucide="chevron-left" class="w-3.5 h-3.5"></i></button>
+            <button onclick="event.stopPropagation(); changeYear(1)" class="p-0.5 text-slate-400 hover:text-indigo-600"><i data-lucide="chevron-right" class="w-3.5 h-3.5"></i></button>
+          </div>
+        </div>
+        <div class="text-lg font-bold text-slate-900" id="sumYearly">₹0</div>
+        <div class="text-[10px] text-slate-500 truncate" id="labelYearly">This year</div>
+        <div class="text-[11px] text-rose-500 font-medium mt-0.5" id="subYearly">Wants: ₹0</div>
       </div>
+    </div>
+
+    <!-- Active Filter Display Banner -->
+    <div class="bg-indigo-50 border border-indigo-200 rounded-xl px-3.5 py-2 flex items-center justify-between text-xs">
+      <span class="text-indigo-900 font-medium" id="currentViewText">Showing: <b>Today's Spending</b></span>
+      <button onclick="resetToToday()" class="text-indigo-600 hover:text-indigo-800 font-semibold underline text-[11px]">Back to Today</button>
     </div>
 
     <!-- Daily Threshold Setting -->
@@ -90,8 +135,8 @@
 
     <!-- Expense List Header -->
     <div class="flex items-center justify-between pt-2">
-      <h2 class="text-base font-bold text-slate-800">Itemized Spending</h2>
-      <span class="text-xs text-slate-500" id="itemCount">0 items recorded</span>
+      <h2 class="text-base font-bold text-slate-800" id="listHeading">Itemized Spending</h2>
+      <span class="text-xs text-slate-500" id="itemCount">0 items</span>
     </div>
 
     <!-- Items List Container -->
@@ -111,7 +156,7 @@
       <form id="expenseForm" onsubmit="handleFormSubmit(event)" class="space-y-3">
         <div>
           <label class="block text-xs font-semibold text-slate-600 mb-1">What did you buy?</label>
-          <input type="text" id="itemTitle" required placeholder="e.g., Coffee, Petrol, Notebook" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+          <input type="text" id="itemTitle" required placeholder="e.g., Limbu tui, Petrol, Chaw" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
         </div>
 
         <div class="grid grid-cols-2 gap-3">
@@ -127,10 +172,9 @@
 
         <div>
           <label class="block text-xs font-semibold text-slate-600 mb-1">Category</label>
-          <input type="text" id="itemCategory" placeholder="e.g., Food, Transport, Snacks" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+          <input type="text" id="itemCategory" placeholder="e.g., Food, General, Bazar" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
         </div>
 
-        <!-- Intent Selection -->
         <div class="pt-2">
           <label class="block text-xs font-semibold text-slate-600 mb-1.5">Was this spending really necessary?</label>
           <div class="grid grid-cols-2 gap-2">
@@ -138,14 +182,14 @@
               <input type="radio" name="intent" value="need" checked class="text-indigo-600">
               <div>
                 <div class="text-xs font-bold text-emerald-700">Need (Essential)</div>
-                <div class="text-[10px] text-slate-400">Bills, groceries, health</div>
+                <div class="text-[10px] text-slate-400">Chaw, damdawi, petrol</div>
               </div>
             </label>
             <label class="border border-slate-200 rounded-lg p-2.5 flex items-center gap-2 cursor-pointer hover:bg-slate-50">
               <input type="radio" name="intent" value="want" class="text-indigo-600">
               <div>
                 <div class="text-xs font-bold text-rose-600">Want (Unnecessary)</div>
-                <div class="text-[10px] text-slate-400">Treats, impulse, luxury</div>
+                <div class="text-[10px] text-slate-400">Thil tui, snacks, treats</div>
               </div>
             </label>
           </div>
@@ -166,20 +210,277 @@
     let expenses = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
     let dailyLimit = parseFloat(localStorage.getItem(LIMIT_KEY) || '500');
 
-    document.getElementById('itemDate').value = new Date().toISOString().split('T')[0];
+    // Filter states
+    let currentView = 'daily'; // 'daily' | 'weekly' | 'monthly' | 'yearly'
+    let selectedDate = new Date(); // Anchor date for browsing
+
+    // Format helpers
+    function toISODate(d) {
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
+    // Initialize inputs
+    document.getElementById('itemDate').value = toISODate(new Date());
+    document.getElementById('selectedDailyDate').value = toISODate(selectedDate);
     document.getElementById('limitInput').value = dailyLimit;
 
     function saveAndRender() {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(expenses));
-      renderList();
-      computeAggregations();
+      computeAllSummaries();
+      renderFilteredList();
       lucide.createIcons();
     }
 
     function updateLimit(val) {
       dailyLimit = parseFloat(val) || 500;
       localStorage.setItem(LIMIT_KEY, dailyLimit);
-      computeAggregations();
+      computeAllSummaries();
+    }
+
+    // Week boundaries (Sunday to Saturday)
+    function getWeekRange(date) {
+      const d = new Date(date);
+      const day = d.getDay(); // 0 is Sunday
+      const sun = new Date(d);
+      sun.setDate(d.getDate() - day);
+      sun.setHours(0,0,0,0);
+
+      const sat = new Date(sun);
+      sat.setDate(sun.getDate() + 6);
+      sat.setHours(23,59,59,999);
+
+      return { start: sun, end: sat };
+    }
+
+    // Month boundaries
+    function getMonthRange(date) {
+      const start = new Date(date.getFullYear(), date.getMonth(), 1, 0,0,0);
+      const end = new Date(date.getFullYear(), date.getMonth() + 1, 0, 23,59,59);
+      return { start, end };
+    }
+
+    // Year boundaries
+    function getYearRange(date) {
+      const start = new Date(date.getFullYear(), 0, 1, 0,0,0);
+      const end = new Date(date.getFullYear(), 11, 31, 23,59,59);
+      return { start, end };
+    }
+
+    // Date Navigation Handlers
+    function changeDay(offset) {
+      selectedDate.setDate(selectedDate.getDate() + offset);
+      document.getElementById('selectedDailyDate').value = toISODate(selectedDate);
+      selectView('daily');
+    }
+
+    function onDailyDatePicked(val) {
+      if (!val) return;
+      const parts = val.split('-');
+      selectedDate = new Date(parts[0], parts[1] - 1, parts[2]);
+      selectView('daily');
+    }
+
+    function changeWeek(offset) {
+      selectedDate.setDate(selectedDate.getDate() + (offset * 7));
+      selectView('weekly');
+    }
+
+    function changeMonth(offset) {
+      selectedDate.setMonth(selectedDate.getMonth() + offset);
+      selectView('monthly');
+    }
+
+    function changeYear(offset) {
+      selectedDate.setFullYear(selectedDate.getFullYear() + offset);
+      selectView('yearly');
+    }
+
+    function resetToToday() {
+      selectedDate = new Date();
+      document.getElementById('selectedDailyDate').value = toISODate(selectedDate);
+      selectView('daily');
+    }
+
+    function selectView(view) {
+      currentView = view;
+      ['cardDaily', 'cardWeekly', 'cardMonthly', 'cardYearly'].forEach(id => {
+        document.getElementById(id).classList.remove('active-card');
+      });
+      if (view === 'daily') document.getElementById('cardDaily').classList.add('active-card');
+      if (view === 'weekly') document.getElementById('cardWeekly').classList.add('active-card');
+      if (view === 'monthly') document.getElementById('cardMonthly').classList.add('active-card');
+      if (view === 'yearly') document.getElementById('cardYearly').classList.add('active-card');
+
+      computeAllSummaries();
+      renderFilteredList();
+      lucide.createIcons();
+    }
+
+    // Sum Calculations
+    function computeAllSummaries() {
+      const todayISO = toISODate(new Date());
+      const selectedDayISO = toISODate(selectedDate);
+
+      // 1. Daily Calculation
+      let dailyTotal = 0, dailyWant = 0;
+      let actualTodayWant = 0; // strictly for today's alert banner
+
+      // 2. Weekly Calculation (Sun - Sat)
+      const weekRange = getWeekRange(selectedDate);
+      let weeklyTotal = 0, weeklyWant = 0;
+
+      // 3. Monthly Calculation
+      const monthRange = getMonthRange(selectedDate);
+      let monthlyTotal = 0, monthlyWant = 0;
+
+      // 4. Yearly Calculation
+      const yearRange = getYearRange(selectedDate);
+      let yearlyTotal = 0, yearlyWant = 0;
+
+      expenses.forEach(item => {
+        const itemDateStr = item.date;
+        const [y, m, d] = itemDateStr.split('-').map(Number);
+        const itemDate = new Date(y, m - 1, d, 12, 0, 0);
+        const amt = item.amount;
+
+        // Daily
+        if (itemDateStr === selectedDayISO) {
+          dailyTotal += amt;
+          if (item.isUnnecessary) dailyWant += amt;
+        }
+
+        // Today's limit alert check
+        if (itemDateStr === todayISO && item.isUnnecessary) {
+          actualTodayWant += amt;
+        }
+
+        // Weekly (Sun - Sat)
+        if (itemDate >= weekRange.start && itemDate <= weekRange.end) {
+          weeklyTotal += amt;
+          if (item.isUnnecessary) weeklyWant += amt;
+        }
+
+        // Monthly
+        if (itemDate >= monthRange.start && itemDate <= monthRange.end) {
+          monthlyTotal += amt;
+          if (item.isUnnecessary) monthlyWant += amt;
+        }
+
+        // Yearly
+        if (itemDate >= yearRange.start && itemDate <= yearRange.end) {
+          yearlyTotal += amt;
+          if (item.isUnnecessary) yearlyWant += amt;
+        }
+      });
+
+      // Update Daily Card
+      document.getElementById('sumDaily').textContent = `₹${dailyTotal.toLocaleString('en-IN')}`;
+      document.getElementById('subDaily').textContent = `Wants: ₹${dailyWant.toLocaleString('en-IN')}`;
+      const isToday = selectedDayISO === todayISO;
+      document.getElementById('labelDaily').textContent = isToday ? 'Today' : selectedDayISO;
+
+      // Update Weekly Card
+      const weekFormat = `${weekRange.start.getDate()} ${weekRange.start.toLocaleString('default', {month:'short'})} - ${weekRange.end.getDate()} ${weekRange.end.toLocaleString('default', {month:'short'})}`;
+      document.getElementById('sumWeekly').textContent = `₹${weeklyTotal.toLocaleString('en-IN')}`;
+      document.getElementById('subWeekly').textContent = `Wants: ₹${weeklyWant.toLocaleString('en-IN')}`;
+      document.getElementById('labelWeekly').textContent = weekFormat;
+
+      // Update Monthly Card
+      const monthFormat = selectedDate.toLocaleString('default', { month: 'long', year: 'numeric' });
+      document.getElementById('sumMonthly').textContent = `₹${monthlyTotal.toLocaleString('en-IN')}`;
+      document.getElementById('subMonthly').textContent = `Wants: ₹${monthlyWant.toLocaleString('en-IN')}`;
+      document.getElementById('labelMonthly').textContent = monthFormat;
+
+      // Update Yearly Card
+      document.getElementById('sumYearly').textContent = `₹${yearlyTotal.toLocaleString('en-IN')}`;
+      document.getElementById('subYearly').textContent = `Wants: ₹${yearlyWant.toLocaleString('en-IN')}`;
+      document.getElementById('labelYearly').textContent = `Year ${selectedDate.getFullYear()}`;
+
+      // Smart Warning Alert check for today
+      const alertEl = document.getElementById('warningAlert');
+      if (actualTodayWant > dailyLimit) {
+        alertEl.classList.remove('hidden');
+        document.getElementById('warningTitle').textContent = `Alert: ₹${actualTodayWant.toLocaleString('en-IN')} spent on unnecessary items today!`;
+        document.getElementById('warningDesc').textContent = `Vawiin atan i limit (₹${dailyLimit}) i khum e. Thil tul lo leina tur chawl rih rawh!`;
+      } else {
+        alertEl.classList.add('hidden');
+      }
+    }
+
+    // Filter Items based on current selected card
+    function renderFilteredList() {
+      const listEl = document.getElementById('expenseList');
+      const selectedDayISO = toISODate(selectedDate);
+      const weekRange = getWeekRange(selectedDate);
+      const monthRange = getMonthRange(selectedDate);
+      const yearRange = getYearRange(selectedDate);
+
+      let filtered = [];
+      let label = "";
+
+      if (currentView === 'daily') {
+        filtered = expenses.filter(i => i.date === selectedDayISO);
+        label = `Spending on ${selectedDayISO}`;
+      } else if (currentView === 'weekly') {
+        filtered = expenses.filter(i => {
+          const [y, m, d] = i.date.split('-').map(Number);
+          const itDate = new Date(y, m - 1, d, 12, 0, 0);
+          return itDate >= weekRange.start && itDate <= weekRange.end;
+        });
+        label = `Week (${weekRange.start.getDate()} ${weekRange.start.toLocaleString('default',{month:'short'})} - ${weekRange.end.getDate()} ${weekRange.end.toLocaleString('default',{month:'short'})})`;
+      } else if (currentView === 'monthly') {
+        filtered = expenses.filter(i => {
+          const [y, m, d] = i.date.split('-').map(Number);
+          const itDate = new Date(y, m - 1, d, 12, 0, 0);
+          return itDate >= monthRange.start && itDate <= monthRange.end;
+        });
+        label = `${selectedDate.toLocaleString('default', { month: 'long', year: 'numeric' })}`;
+      } else if (currentView === 'yearly') {
+        filtered = expenses.filter(i => {
+          const [y, m, d] = i.date.split('-').map(Number);
+          return y === selectedDate.getFullYear();
+        });
+        label = `Year ${selectedDate.getFullYear()}`;
+      }
+
+      document.getElementById('currentViewText').innerHTML = `Showing: <b>${label}</b>`;
+      document.getElementById('itemCount').textContent = `${filtered.length} item${filtered.length === 1 ? '' : 's'}`;
+
+      if (filtered.length === 0) {
+        listEl.innerHTML = `
+          <div class="bg-white rounded-xl border border-slate-200 p-8 text-center text-slate-400 text-sm">
+            <i data-lucide="calendar-x" class="w-10 h-10 mx-auto text-slate-300 mb-2"></i>
+            Hemi hun chhung hian pawisa hman a la awm lo.
+          </div>
+        `;
+        return;
+      }
+
+      listEl.innerHTML = filtered.map(item => `
+        <div class="bg-white border border-slate-200 rounded-xl p-3.5 flex items-center justify-between shadow-sm">
+          <div class="flex-1 pr-3">
+            <div class="flex items-center gap-2">
+              <span class="font-bold text-slate-900 text-sm">${item.title}</span>
+              <span class="text-[11px] px-2 py-0.5 rounded-full font-semibold ${item.isUnnecessary ? 'badge-want' : 'badge-need'}">
+                ${item.isUnnecessary ? 'Unnecessary' : 'Essential'}
+              </span>
+            </div>
+            <div class="text-xs text-slate-500 mt-1 flex items-center gap-3">
+              <span><i data-lucide="tag" class="w-3 h-3 inline mr-1 text-slate-400"></i>${item.category}</span>
+              <span><i data-lucide="calendar" class="w-3 h-3 inline mr-1 text-slate-400"></i>${item.date}</span>
+            </div>
+          </div>
+          <div class="text-right flex items-center gap-3">
+            <span class="text-base font-bold text-slate-900">₹${item.amount.toLocaleString('en-IN')}</span>
+            <button onclick="deleteItem('${item.id}')" class="text-slate-300 hover:text-rose-500 transition p-1" title="Delete">
+              <i data-lucide="trash-2" class="w-4 h-4"></i>
+            </button>
+          </div>
+        </div>
+      `).join('');
     }
 
     function handleFormSubmit(e) {
@@ -205,7 +506,7 @@
       saveAndRender();
 
       document.getElementById('expenseForm').reset();
-      document.getElementById('itemDate').value = new Date().toISOString().split('T')[0];
+      document.getElementById('itemDate').value = toISODate(new Date());
       document.getElementById('addModal').classList.add('hidden');
     }
 
@@ -214,99 +515,7 @@
       saveAndRender();
     }
 
-    function computeAggregations() {
-      const todayStr = new Date().toISOString().split('T')[0];
-      const todayDate = new Date();
-      const currentYear = todayDate.getFullYear();
-      const currentMonth = todayDate.getMonth();
-
-      let dailySum = 0;
-      let dailyUnnecessary = 0;
-      let weeklySum = 0;
-      let monthlySum = 0;
-      let yearlySum = 0;
-
-      const sevenDaysAgo = new Date();
-      sevenDaysAgo.setDate(todayDate.getDate() - 7);
-
-      expenses.forEach(item => {
-        const itemDate = new Date(item.date);
-        const amt = item.amount;
-
-        if (item.date === todayStr) {
-          dailySum += amt;
-          if (item.isUnnecessary) {
-            dailyUnnecessary += amt;
-          }
-        }
-
-        if (itemDate >= sevenDaysAgo && itemDate <= todayDate) {
-          weeklySum += amt;
-        }
-
-        if (itemDate.getFullYear() === currentYear && itemDate.getMonth() === currentMonth) {
-          monthlySum += amt;
-        }
-
-        if (itemDate.getFullYear() === currentYear) {
-          yearlySum += amt;
-        }
-      });
-
-      document.getElementById('sumDaily').textContent = `₹${dailySum.toLocaleString('en-IN')}`;
-      document.getElementById('subDaily').textContent = `Wants: ₹${dailyUnnecessary.toLocaleString('en-IN')}`;
-      document.getElementById('sumWeekly').textContent = `₹${weeklySum.toLocaleString('en-IN')}`;
-      document.getElementById('sumMonthly').textContent = `₹${monthlySum.toLocaleString('en-IN')}`;
-      document.getElementById('sumYearly').textContent = `₹${yearlySum.toLocaleString('en-IN')}`;
-
-      const alertEl = document.getElementById('warningAlert');
-      if (dailyUnnecessary > dailyLimit) {
-        alertEl.classList.remove('hidden');
-        document.getElementById('warningTitle').textContent = `Alert: ₹${dailyUnnecessary.toLocaleString('en-IN')} spent on unnecessary items today!`;
-        document.getElementById('warningDesc').textContent = `You exceeded your ₹${dailyLimit} daily limit on wants. Think twice before your next purchase today!`;
-      } else {
-        alertEl.classList.add('hidden');
-      }
-    }
-
-    function renderList() {
-      const listEl = document.getElementById('expenseList');
-      document.getElementById('itemCount').textContent = `${expenses.length} item${expenses.length === 1 ? '' : 's'}`;
-
-      if (expenses.length === 0) {
-        listEl.innerHTML = `
-          <div class="bg-white rounded-xl border border-slate-200 p-8 text-center text-slate-400 text-sm">
-            <i data-lucide="receipt" class="w-10 h-10 mx-auto text-slate-300 mb-2"></i>
-            No spending recorded yet. Click <b>Add Item</b> above to begin!
-          </div>
-        `;
-        return;
-      }
-
-      listEl.innerHTML = expenses.map(item => `
-        <div class="bg-white border border-slate-200 rounded-xl p-3.5 flex items-center justify-between shadow-sm">
-          <div class="flex-1 pr-3">
-            <div class="flex items-center gap-2">
-              <span class="font-bold text-slate-900 text-sm">${item.title}</span>
-              <span class="text-[11px] px-2 py-0.5 rounded-full font-semibold ${item.isUnnecessary ? 'badge-want' : 'badge-need'}">
-                ${item.isUnnecessary ? 'Unnecessary' : 'Essential'}
-              </span>
-            </div>
-            <div class="text-xs text-slate-500 mt-1 flex items-center gap-3">
-              <span><i data-lucide="tag" class="w-3 h-3 inline mr-1 text-slate-400"></i>${item.category}</span>
-              <span><i data-lucide="calendar" class="w-3 h-3 inline mr-1 text-slate-400"></i>${item.date}</span>
-            </div>
-          </div>
-          <div class="text-right flex items-center gap-3">
-            <span class="text-base font-bold text-slate-900">₹${item.amount.toLocaleString('en-IN')}</span>
-            <button onclick="deleteItem('${item.id}')" class="text-slate-300 hover:text-rose-500 transition p-1" title="Delete">
-              <i data-lucide="trash-2" class="w-4 h-4"></i>
-            </button>
-          </div>
-        </div>
-      `).join('');
-    }
-
+    // Initial run
     saveAndRender();
   </script>
 </body>
